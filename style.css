@@ -1,0 +1,343 @@
+:root {
+  --surface: #131313;
+  --primary: #39FF14;
+  --warning: #FFB300;
+  --critical: #FF3B30;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --border: #27272A;
+  --surface-container: #1C1C1E;
+  --sidebar-bg: #18181B;
+  
+  --font-family: 'Inter', sans-serif;
+  --radius-minimal: 4px;
+  --spacing-base: 8px;
+  --touch-target: 64px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Typography */
+h1, h2, h3 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.label {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+/* Layout */
+.app-container {
+  display: flex;
+  width: 100%;
+}
+
+.sidebar {
+  width: 280px;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding-top: 32px;
+}
+
+.sidebar-header {
+  padding: 0 24px;
+  margin-bottom: 40px;
+}
+
+.sidebar-header h1 {
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.sidebar-header .subtitle {
+  color: var(--primary);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.nav-item.active {
+  border-left-color: var(--primary);
+  background-color: var(--border);
+  color: var(--primary);
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+/* Cards */
+.card {
+  background-color: var(--surface-container);
+  border-radius: var(--radius-minimal);
+  padding: 24px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* 12 Column Layout Utilities */
+.col-4 { grid-column: span 4; }
+.col-8 { grid-column: span 8; }
+.col-6 { grid-column: span 6; }
+.col-12 { grid-column: span 12; }
+
+/* Status Gauge */
+.gauge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 200px;
+}
+
+.gauge-svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 12;
+}
+
+.gauge-progress {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 12;
+  stroke-dasharray: 440; /* 2 * pi * 70 */
+  stroke-dashoffset: 440;
+  transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+  stroke-linecap: round;
+}
+
+.gauge-value {
+  position: absolute;
+  font-size: 36px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.gauge-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Slider */
+.slider-container {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  height: var(--touch-target); /* touch target area */
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: var(--border);
+  border-radius: var(--radius-minimal);
+}
+
+input[type=range]::-webkit-slider-thumb {
+  height: 24px; /* Increased thumb size for touch */
+  width: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -9px; /* (6px track / 2) - (24px thumb / 2) */
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.4);
+}
+
+/* Action Button */
+.btn {
+  height: var(--touch-target);
+  border-radius: var(--radius-minimal);
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #000000;
+}
+
+.btn-primary:active {
+  background-color: #2ED110;
+  transform: scale(0.98);
+}
+
+.btn-danger {
+  background-color: var(--critical);
+  color: #FFFFFF;
+}
+
+/* Alert Overlay */
+.alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  border: 12px solid var(--critical);
+  animation: none;
+}
+
+.alert-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  animation: pulse-border 1s infinite alternate;
+}
+
+@keyframes pulse-border {
+  from { border-color: rgba(255, 59, 48, 0.6); box-shadow: inset 0 0 0px rgba(255,59,48,0); }
+  to { border-color: var(--critical); box-shadow: inset 0 0 60px rgba(255,59,48,0.4); }
+}
+
+.alert-icon {
+  width: 120px;
+  height: 120px;
+  fill: var(--critical);
+  margin-bottom: 32px;
+  animation: pulse-icon 1s infinite alternate;
+}
+
+@keyframes pulse-icon {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(1.1); opacity: 1; }
+}
+
+.alert-title {
+  font-size: 64px;
+  color: var(--critical);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.alert-subtitle {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.alert-cta-container {
+  width: 400px;
+}
