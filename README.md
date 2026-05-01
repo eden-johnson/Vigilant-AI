@@ -35,7 +35,7 @@ Because this project relies on specific pre-compiled C++ binaries for facial tra
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YourUsername/vigilant-ai.git
+git clone https://github.com/eden-johnson/vigilant-ai.git
 cd vigilant-ai
 ```
 
