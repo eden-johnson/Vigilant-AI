@@ -54,8 +54,14 @@ function setFatigueLevel(value) {
   fatigueStatusDot.style.backgroundColor = color;
   fatigueStatusDot.style.boxShadow = `0 0 8px ${color}`;
 
-  // Log to feed
-  if(Math.random() > 0.7) {
+  // Log to feed (throttled to avoid spam)
+  const now = Date.now();
+  if (!window.lastLogTime) window.lastLogTime = 0;
+  if (!window.lastLoggedFatigue) window.lastLoggedFatigue = -1;
+  
+  if (Math.abs(value - window.lastLoggedFatigue) >= 5 || (now - window.lastLogTime > 2000)) {
+    window.lastLoggedFatigue = value;
+    window.lastLogTime = now;
     logToFeed(`> Fatigue index updated: ${value}% [${label.toUpperCase()}]`);
   }
 }
@@ -82,25 +88,58 @@ sensitivitySlider.addEventListener('input', (e) => {
   // Update slider thumb visual logic if needed, but CSS handles it
 });
 
+let currentFatigue = 0;
+let currentAttention = 100;
+
 // Real-time telemetry from Python
-window.updateTelemetry = function(ear, mar, status, alert_message) {
-  // Convert EAR (threshold ~0.25) to a fatigue percentage
-  // If EAR > 0.30, fatigue is 0. If EAR < 0.20, fatigue is 100
-  let fatigue = 0;
-  if (ear < 0.30) {
-    fatigue = ((0.30 - ear) / 0.10) * 100;
+window.updateTelemetry = function(ear, mar, status, alert_message, frame_b64) {
+  if (frame_b64) {
+    document.getElementById('videoFeed').src = "data:image/jpeg;base64," + frame_b64;
   }
-  fatigue = Math.max(0, Math.min(100, Math.round(fatigue)));
 
-  // Convert MAR (threshold ~0.60) to a metric (optional, we can just use status)
-  let attention = 100 - fatigue;
-  if (mar > 0.60) {
-    attention -= 20; // Yawning reduces attention
+  // 1. Calculate Target Fatigue
+  // Map EAR from 0.28 (awake) to 0.20 (closed)
+  let targetFatigue = 0;
+  if (ear < 0.28) {
+    targetFatigue = ((0.28 - ear) / 0.08) * 100;
   }
-  attention = Math.max(0, Math.min(100, Math.round(attention)));
+  targetFatigue = Math.max(0, Math.min(100, targetFatigue));
 
-  setFatigueLevel(fatigue);
-  setAttentionLevel(attention);
+  // If system explicitly detects drowsy status, force fatigue high
+  if (status === "DROWSY!") {
+    targetFatigue = 100;
+  } else if (status === "NO FACE") {
+    targetFatigue = currentFatigue; // Pause fatigue index when no face detected
+  }
+
+  // 2. Smooth the Fatigue (prevent blink spikes)
+  if (targetFatigue > currentFatigue) {
+    // Increase slowly so a quick blink doesn't max it out
+    currentFatigue += 2.0; 
+  } else {
+    // Decrease very slowly so fatigue persists a bit
+    currentFatigue -= 0.5;
+  }
+  currentFatigue = Math.max(0, Math.min(100, currentFatigue));
+
+  // 3. Calculate Target Attention
+  let targetAttention = 100;
+  if (status === "YAWNING!") {
+    targetAttention = 20;
+  } else if (currentFatigue > 50) {
+    targetAttention = 100 - currentFatigue;
+  }
+  
+  // 4. Smooth Attention
+  if (targetAttention < currentAttention) {
+    currentAttention -= 3.0; // Drop relatively fast
+  } else {
+    currentAttention += 1.0; // Recover slower
+  }
+  currentAttention = Math.max(0, Math.min(100, currentAttention));
+
+  setFatigueLevel(Math.round(currentFatigue));
+  setAttentionLevel(Math.round(currentAttention));
 
   // Handle alerts triggered by Python
   if (alert_message && !alertOverlay.classList.contains('active')) {
@@ -117,9 +156,9 @@ function triggerAlert() {
 
 function dismissAlert() {
   alertOverlay.classList.remove('active');
-  simFatigue = 0; // Reset fatigue on awake
+  currentFatigue = 0; // Reset smoothed fatigue on awake
   setFatigueLevel(0);
-  simAttention = 100;
+  currentAttention = 100;
   setAttentionLevel(100);
   logToFeed(`> Driver acknowledged alert. System reset to optimal.`);
 }

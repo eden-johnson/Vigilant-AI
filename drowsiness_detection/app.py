@@ -3,6 +3,7 @@ import time
 import webview
 import cv2
 import os
+import base64
 from detector import DrowsinessDetector
 from config import ALERT_SOUND
 
@@ -11,16 +12,19 @@ stop_event = threading.Event()
 
 class Api:
     def __init__(self):
-        self.window = None
+        self._window = None
 
     def set_window(self, window):
-        self.window = window
+        self._window = window
 
-    def send_telemetry(self, ear, mar, status, alert_message):
-        if self.window:
-            js_code = f"window.updateTelemetry({ear:.4f}, {mar:.4f}, '{status}', '{alert_message}')"
+    def send_telemetry(self, ear, mar, status, alert_message, frame_b64=None):
+        if self._window:
+            if frame_b64:
+                js_code = f"window.updateTelemetry({ear:.4f}, {mar:.4f}, '{status}', '{alert_message}', '{frame_b64}')"
+            else:
+                js_code = f"window.updateTelemetry({ear:.4f}, {mar:.4f}, '{status}', '{alert_message}')"
             try:
-                self.window.evaluate_js(js_code)
+                self._window.evaluate_js(js_code)
             except Exception:
                 pass
 
@@ -46,13 +50,19 @@ def run_vision_loop(api):
             break
 
         frame = cv2.flip(frame, 1)
-        detector.process_frame(frame)
+        annotated = detector.process_frame(frame)
+
+        # Encode frame for UI
+        small_frame = cv2.resize(annotated, (480, 360))
+        ret_enc, buffer = cv2.imencode('.jpg', small_frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
+        frame_b64 = base64.b64encode(buffer).decode('utf-8') if ret_enc else None
 
         api.send_telemetry(
             detector.current_ear,
             detector.current_mar,
             detector.current_status,
-            detector.alert_message
+            detector.alert_message,
+            frame_b64
         )
 
         time.sleep(0.03)
@@ -60,9 +70,9 @@ def run_vision_loop(api):
     cap.release()
     detector.release()
 
-    if api.window:
+    if api._window:
         try:
-            api.window.destroy()
+            api._window.destroy()
         except Exception:
             pass
 

@@ -109,6 +109,10 @@ class DrowsinessDetector:
         else:
             cv2.putText(frame, "NO FACE DETECTED", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            self.current_status = "NO FACE"
+            self.alert_message = ""
+            self.current_ear = 0.0
+            self.current_mar = 0.0
 
         return frame
 
